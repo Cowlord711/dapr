@@ -80,7 +80,7 @@ jobs:
         if: github.event_name == 'schedule'
         run: |
           echo "REL_VERSION=nightly-$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-          echo ::set-output name=nightly::"nightly"
+          echo "RELEASE_TO_GH=True" >> $GITHUB_ENV
       - name: Check white space in .md files
         if: matrix.target_os == 'linux' && github.event_name == 'pull_request'
         run: |
@@ -187,6 +187,12 @@ jobs:
           docker -v
       - name: Parse release version and set REL_VERSION
         run: python ./.github/scripts/get_release_version.py
+      - name: Set REL_VERSION for nightly build
+        id: nightly-rel
+        if: github.event_name == 'schedule'
+        run: |
+          echo "REL_VERSION=nightly-$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          echo "RELEASE_TO_GH=True" >> $GITHUB_ENV
       - name: Generate helm chart manifest
         run: make manifest-gen DAPR_REGISTRY=${{ env.DOCKER_REGISTRY }} DAPR_TAG=$REL_VERSION
       - name: move helm chart manifest to artifact
@@ -247,8 +253,12 @@ jobs:
         run: cd ${ARTIFACT_DIR} && for i in *; do sha256sum -b $i > "$i.sha256"; done && cd -
       - name: lists artifacts
         run: ls -l ${{ env.ARTIFACT_DIR }}
+      - name: check for release
+        if: startswith(github.ref, 'refs/tags/v')
+        run: |
+          echo "RELEASE_TO_GH=True" >> $GITHUB_ENV
       - name: publish binaries to github
-        if: startswith(github.ref, 'refs/tags/v') || contains(steps.nightly-rel.outputs.nightly, 'nightly')
+        if:  contains(env.RELEASE_TO_GH, 'nightly')
         run: |
           echo "installing github-release-cli..."
           sudo npm install --silent --no-progress -g github-release-cli@1.3.1
@@ -306,7 +316,7 @@ jobs:
   helmpublish:
     name: Publish helm charts to Helm github pages repo
     needs: publish
-    if: startswith(github.ref, 'refs/tags/v') || contains(steps.nightly-rel.outputs.nightly, 'nightly')
+    if: startswith(github.ref, 'refs/tags/v')
     env:
       ARTIFACT_DIR: ./release
       DAPR_VERSION_ARTIFACT: dapr_version
