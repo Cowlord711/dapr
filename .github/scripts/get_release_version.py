@@ -28,6 +28,7 @@ with open(os.getenv("GITHUB_ENV"), "a") as githubEnv:
         print ("This is daily build from {}...".format(gitRef))
         sys.exit(0)
 
+    print ("gitRef: {}".format(gitRef))
     releaseVersion = gitRef[len(tagRefPrefix):]
     releaseNotePath="docs/release_notes/v{}.md".format(releaseVersion)
 
