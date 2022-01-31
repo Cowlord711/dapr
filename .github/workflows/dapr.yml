@@ -74,7 +74,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
       - name: Parse release version and set REL_VERSION
-        run: python ./.github/scripts/get_release_version.py
+        run: python ./.github/scripts/get_release_version.py nightly
       - name: Set REL_VERSION for nightly build
         if: github.event_name == 'schedule'
         run: |
