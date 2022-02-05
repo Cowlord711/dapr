@@ -17,17 +17,28 @@
 
 import os
 import sys
+import datetime
 
 gitRef = os.getenv("GITHUB_REF")
 tagRefPrefix = "refs/tags/v"
 
 with open(os.getenv("GITHUB_ENV"), "a") as githubEnv:
 
+    if "nightly" in sys.argv or gitRef.find("nightly") > -1:
+        dateTag = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+        githubEnv.write("REL_VERSION=nightly-{}\n".format(dateTag))
+        githubEnv.write("REL_TAG=nightly-{}\n".format(dateTag))
+        githubEnv.write("RELEASE_TO_GH=False")
+        print ("Nightly release build nightly-{}".format(dateTag))
+        sys.exit(0)
+
     if gitRef is None or not gitRef.startswith(tagRefPrefix):
         githubEnv.write("REL_VERSION=edge\n")
+        githubEnv.write("RELEASE_TO_GH=False")
         print ("This is daily build from {}...".format(gitRef))
         sys.exit(0)
 
+    print ("gitRef: {}".format(gitRef))
     releaseVersion = gitRef[len(tagRefPrefix):]
     releaseNotePath="docs/release_notes/v{}.md".format(releaseVersion)
 
@@ -45,3 +56,5 @@ with open(os.getenv("GITHUB_ENV"), "a") as githubEnv:
         print ("Release build from {}...".format(gitRef))
 
     githubEnv.write("REL_VERSION={}\n".format(releaseVersion))
+    githubEnv.write("REL_TAG=v{}\n".format(releaseVersion))
+    githubEnv.write("RELEASE_TO_GH=False")
