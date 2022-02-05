@@ -208,9 +208,9 @@ push-kind-perf-app-all: $(PUSH_KIND_PERF_APPS_TARGETS)
 test-deps:
 	# The desire here is to download this test dependency without polluting go.mod
 	# In golang >=1.16 there is a new way to do this with `go install gotest.tools/gotestsum@latest`
-	# But this doesn't work with <=1.15, so we do it the old way for now 
+	# But this doesn't work with <=1.15.
 	# (see: https://golang.org/ref/mod#go-install)
-	command -v gotestsum || GO111MODULE=off go get gotest.tools/gotestsum
+	command -v gotestsum || go install gotest.tools/gotestsum@latest
 
 # start all e2e tests
 test-e2e-all: check-e2e-env test-deps
@@ -313,7 +313,6 @@ setup-test-components: setup-app-configurations
 	$(KUBECTL) apply -f ./tests/config/app_topic_subscription_routing.yaml --namespace $(DAPR_TEST_NAMESPACE)
 	$(KUBECTL) apply -f ./tests/config/app_topic_subscription_routing_grpc.yaml --namespace $(DAPR_TEST_NAMESPACE)
 	$(KUBECTL) apply -f ./tests/config/app_pubsub_routing.yaml --namespace $(DAPR_TEST_NAMESPACE)
-	$(KUBECTL) apply -f ./tests/config/kubernetes_grpc_proxy_config.yaml --namespace $(DAPR_TEST_NAMESPACE)
 
 	# Show the installed components
 	$(KUBECTL) get components --namespace $(DAPR_TEST_NAMESPACE)
